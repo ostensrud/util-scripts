@@ -57,13 +57,18 @@ foreach (sort(@subfolders)) {
     $prunes{$1} = "1" if $line =~ /(?:\[would prune\]) $remote_name\/(.*)?/;
   }
 
+  say $bold . "Branches that will be pruned:" . $reset;
+  say $_ foreach(keys %prunes);
+  say "";
+
   foreach (keys %prunes) {
     delete $prunes{$_} unless $local_branches{$_};
   }
 
-  say $bold . "Local branches that will be deleted:" . $reset;
+  say $bold . "Local branches that will be deleted:" . $reset if keys (%prunes);
   say $_ foreach(keys %prunes);
-  say "";
+  say "" if keys (%prunes);
+
   print "Would you like to proceed?[y|n]: ";
   my $response = <STDIN>;
   next unless ($response =~ /[Yy]/);
