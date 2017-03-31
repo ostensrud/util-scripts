@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Cwd;
+use Cwd qw(abs_path getcwd);
 
 use feature 'say';
 
@@ -16,7 +16,7 @@ my $bold = "\e[1m";
 
 my $remote_name = "origin"; # could look this up but for now we'll just assume
 my $skip_current_branch = 0;
-my $path = shift;
+my $path = abs_path(shift);
 
 die "$path is not a folder\n" unless (-d $path);
 
