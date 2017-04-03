@@ -56,6 +56,9 @@ foreach (sort(@subfolders)) {
 
   say $bold . "The following local branches will be deleted:" . $reset; 
   say $_ foreach keys %prunes;
+  say "Proceed? [y|n]";
+  my $response = <STDIN>;
+  next unless ($response =~ /[Yy]/);
 
   if ($prunes{$current_branch}) {
     say $green."You're on a branch that will be deleted. Moving to master.".$reset;
@@ -76,7 +79,7 @@ foreach (sort(@subfolders)) {
     if ($?) {
       say $red . "The branch $_ is not fully merged." . $reset;
       print $red . "Would you like to delete it? [y|n]: " . $reset;
-      my $response = <STDIN>;
+      $response = <STDIN>;
       next unless ($response =~ /[Yy]/);
       `git branch -D $_`;
     }
