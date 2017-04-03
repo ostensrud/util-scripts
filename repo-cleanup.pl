@@ -38,45 +38,24 @@ foreach (sort(@subfolders)) {
 
   say $green . "Processing $current" . $reset;
 
-  system("git remote update");
-
-  # Check what will be removed
-  my $dry_run_result = `git remote prune origin --dry-run`;
-
-  # If nothing, next repo
-  next unless $dry_run_result;
-
-  # Find local branches
-  my $local_branches = `git rev-parse --symbolic --branches`;
-  my %local_branches = map { $_ => 1 } split("\n", $local_branches);
-
-  my @lines = split("\n", $dry_run_result);
-  my %prunes;
-
-  foreach my $line (@lines) {
-    $prunes{$1} = "1" if $line =~ /(?:\[would prune\]) $remote_name\/(.*)?/;
-  }
-
-  say $bold . "Branches that will be pruned:" . $reset;
-  say $_ foreach(keys %prunes);
-  say "";
-
-  foreach (keys %prunes) {
-    delete $prunes{$_} unless $local_branches{$_};
-  }
-
-  say $bold . "Local branches that will be deleted:" . $reset if keys (%prunes);
-  say $_ foreach(keys %prunes);
-  say "" if keys (%prunes);
-
-  print "Would you like to proceed?[y|n]: ";
-  my $response = <STDIN>;
-  next unless ($response =~ /[Yy]/);
-
-  `git remote prune origin`;
+  system("git remote update $remote_name --prune");
 
   my $current_branch = `git rev-parse --abbrev-ref HEAD`;
   chomp($current_branch);
+
+  # Find local branches and their tracking status
+  my $lb = `git branch -vv`;
+  my @lines = split("\n", $lb);
+
+  my %prunes;
+  foreach my $line (@lines) {
+    $prunes{$1} = "1" if $line =~ /.+?\[$remote_name\/(.+)?: gone\]/;
+  }
+
+  next unless(keys(%prunes)); 
+
+  say $bold . "The following local branches will be deleted:" . $reset; 
+  say $_ foreach keys %prunes;
 
   if ($prunes{$current_branch}) {
     say $green."You're on a branch that will be deleted. Moving to master.".$reset;
@@ -97,7 +76,7 @@ foreach (sort(@subfolders)) {
     if ($?) {
       say $red . "The branch $_ is not fully merged." . $reset;
       print $red . "Would you like to delete it? [y|n]: " . $reset;
-      $response = <STDIN>;
+      my $response = <STDIN>;
       next unless ($response =~ /[Yy]/);
       `git branch -D $_`;
     }
